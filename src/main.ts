@@ -35,7 +35,7 @@ const CLASSROOM_LATLNG = leaflet.latLng(
 const GAMEPLAY_ZOOM_LEVEL = 19;
 const TILE_DEGREES = 1e-4;
 const NEIGHBORHOOD_SIZE = 8;
-const CACHE_SPAWN_PROBABILITY = 0.1;
+//const CACHE_SPAWN_PROBABILITY = 0.1;
 
 // Create the map (element with id "map" is defined in index.html)
 const map = leaflet.map(mapDiv, {
@@ -61,55 +61,62 @@ const playerMarker = leaflet.marker(CLASSROOM_LATLNG);
 playerMarker.bindTooltip("That's you!");
 playerMarker.addTo(map);
 
-// Display the player's points
+// Player score
 let playerPoints = 0;
 statusPanelDiv.innerHTML = "No points yet...";
 
-// Add caches to the map by cell numbers
-function spawnCache(i: number, j: number) {
-  // Convert cell numbers into lat/lng bounds
-  const origin = CLASSROOM_LATLNG;
-  const bounds = leaflet.latLngBounds([
-    [origin.lat + i * TILE_DEGREES, origin.lng + j * TILE_DEGREES],
-    [origin.lat + (i + 1) * TILE_DEGREES, origin.lng + (j + 1) * TILE_DEGREES],
-  ]);
+function getTokenValue(nx: number, ny: number): number | null {
+  const seed = `${nx},${ny}`;
+  const h = luck(seed);
 
-  // Add a rectangle to the map to represent the cache
-  const rect = leaflet.rectangle(bounds);
-  rect.addTo(map);
+  if (h < 0.5) return null;
 
-  // Handle interactions with the cache
-  rect.bindPopup(() => {
-    // Each cache has a random point value, mutable by the player
-    let pointValue = Math.floor(luck([i, j, "initialValue"].toString()) * 100);
+  if (h < 0.8) return 1; // weight 30%
+  if (h < 0.95) return 2; // weight 15%
+  return 3; // weight 5%
+}
 
-    // The popup offers a description and button
-    const popupDiv = document.createElement("div");
-    popupDiv.innerHTML = `
-                <div>There is a cache here at "${i},${j}". It has value <span id="value">${pointValue}</span>.</div>
-                <button id="poke">poke</button>`;
+function drawCell(nx: number, ny: number) {
+  const lat = CLASSROOM_LATLNG.lat + ny * TILE_DEGREES;
+  const lng = CLASSROOM_LATLNG.lng + nx * TILE_DEGREES;
 
-    // Clicking the button decrements the cache's value and increments the player's points
-    popupDiv
-      .querySelector<HTMLButtonElement>("#poke")!
-      .addEventListener("click", () => {
-        pointValue--;
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          pointValue.toString();
-        playerPoints++;
-        statusPanelDiv.innerHTML = `${playerPoints} points accumulated`;
-      });
+  const bounds = leaflet.latLngBounds(
+    leaflet.latLng(lat, lng),
+    leaflet.latLng(lat + TILE_DEGREES, lng + TILE_DEGREES),
+  );
 
-    return popupDiv;
+  const val = getTokenValue(nx, ny);
+  let color = "rgba(0,0,0,0)";
+
+  if (val === 1) color = "rgba(255,0,0,0.4)";
+  if (val === 2) color = "rgba(0,0,255,0.4)";
+  if (val === 3) color = "rgba(0,255,0,0.4)";
+
+  leaflet.rectangle(bounds, {
+    color: color,
+    fillColor: color,
+    fillOpacity: 0.6,
+    weight: 0,
+  }).addTo(map);
+
+  const rect = leaflet.rectangle(bounds, {
+    color,
+    fillColor: color,
+    fillOpacity: 0.6,
+    weight: 0,
+  }).addTo(map);
+
+  rect.on("click", () => {
+    const val = getTokenValue(nx, ny);
+    if (val !== null) {
+      playerPoints += val;
+      statusPanelDiv.innerHTML = `Points: ${playerPoints}`;
+    }
   });
 }
 
-// Look around the player's neighborhood for caches to spawn
-for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
-  for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
-    // If location i,j is lucky enough, spawn a cache!
-    if (luck([i, j].toString()) < CACHE_SPAWN_PROBABILITY) {
-      spawnCache(i, j);
-    }
+for (let nx = 0; nx < NEIGHBORHOOD_SIZE; nx++) {
+  for (let ny = 0; ny < NEIGHBORHOOD_SIZE; ny++) {
+    drawCell(nx, ny);
   }
 }
