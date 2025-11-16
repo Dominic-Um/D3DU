@@ -2,4 +2,6 @@
 
 2.) Clickable tokens.
 
-3.) Inventory system
+3.) Inventory system.
+
+4.) Crafting mechanics and win condition.
