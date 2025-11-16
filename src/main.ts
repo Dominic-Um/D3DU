@@ -61,7 +61,29 @@ const playerMarker = leaflet.marker(CLASSROOM_LATLNG);
 playerMarker.bindTooltip("That's you!");
 playerMarker.addTo(map);
 
+const dropoffLatLng = leaflet.latLng(
+  CLASSROOM_LATLNG.lat + 0.0008,
+  CLASSROOM_LATLNG.lng,
+);
+
+const dropoffMarker = leaflet.marker(dropoffLatLng);
+dropoffMarker.bindTooltip("Drop-off Point");
+dropoffMarker.addTo(map);
+
+dropoffMarker.on("click", () => {
+  if (heldToken === null) {
+    statusPanelDiv.innerHTML = "Holding: none (nothing to drop)";
+    return;
+  }
+
+  playerPoints += heldToken;
+  heldToken = null;
+
+  statusPanelDiv.innerHTML = `Holding: none — Total Points: ${playerPoints}`;
+});
+
 // Player score
+let playerPoints = 0;
 let heldToken: number | null = null;
 statusPanelDiv.innerHTML = "Holding: none";
 
