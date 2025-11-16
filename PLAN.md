@@ -4,4 +4,6 @@
 
 3.) Inventory system.
 
-4.) Crafting mechanics and win condition.
+4.) Discard a token.
+
+5.) Crafting mechanics and win condition.
