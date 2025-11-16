@@ -25,6 +25,11 @@ const statusPanelDiv = document.createElement("div");
 statusPanelDiv.id = "statusPanel";
 document.body.append(statusPanelDiv);
 
+const craftBtn = document.createElement("button");
+craftBtn.textContent = "Craft Special Item (Cost: 10)";
+craftBtn.id = "craftButton";
+controlPanelDiv.append(craftBtn);
+
 // Our classroom location
 const CLASSROOM_LATLNG = leaflet.latLng(
   36.997936938057016,
@@ -85,6 +90,32 @@ dropoffMarker.on("click", () => {
 // Player score
 let playerPoints = 0;
 let heldToken: number | null = null;
+let gameWon = false;
+
+craftBtn.addEventListener("click", tryCrafting);
+
+function disableTileClicks() {
+  map.off();
+}
+
+function tryCrafting() {
+  if (gameWon) return;
+
+  if (playerPoints < 10) {
+    statusPanelDiv.innerHTML =
+      `Not enough points to craft. Need 10, you have ${playerPoints}.`;
+    return;
+  }
+
+  playerPoints -= 10;
+
+  gameWon = true;
+  statusPanelDiv.innerHTML =
+    `🎉 You crafted the Special Item and WIN! Final Score: ${playerPoints}`;
+
+  craftBtn.disabled = true;
+  disableTileClicks();
+}
 statusPanelDiv.innerHTML = "Holding: none";
 
 function getTokenValue(nx: number, ny: number): number | null {
@@ -93,9 +124,9 @@ function getTokenValue(nx: number, ny: number): number | null {
 
   if (h < 0.5) return null;
 
-  if (h < 0.8) return 1; // weight 30%
-  if (h < 0.95) return 2; // weight 15%
-  return 3; // weight 5%
+  if (h < 0.8) return 1;
+  if (h < 0.95) return 2;
+  return 3;
 }
 
 function drawCell(nx: number, ny: number) {
@@ -129,6 +160,7 @@ function drawCell(nx: number, ny: number) {
   }).addTo(map);
 
   rect.on("click", () => {
+    if (gameWon) return;
     const val = getTokenValue(nx, ny);
     if (val !== null) {
       if (val === null) return;
