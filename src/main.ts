@@ -62,8 +62,8 @@ playerMarker.bindTooltip("That's you!");
 playerMarker.addTo(map);
 
 // Player score
-let playerPoints = 0;
-statusPanelDiv.innerHTML = "No points yet...";
+let heldToken: number | null = null;
+statusPanelDiv.innerHTML = "Holding: none";
 
 function getTokenValue(nx: number, ny: number): number | null {
   const seed = `${nx},${ny}`;
@@ -109,8 +109,15 @@ function drawCell(nx: number, ny: number) {
   rect.on("click", () => {
     const val = getTokenValue(nx, ny);
     if (val !== null) {
-      playerPoints += val;
-      statusPanelDiv.innerHTML = `Points: ${playerPoints}`;
+      if (val === null) return;
+
+      if (heldToken !== null) {
+        statusPanelDiv.innerHTML = `Holding: ${heldToken}`;
+        return;
+      }
+
+      heldToken = val;
+      statusPanelDiv.innerHTML = `Holding: ${heldToken}`;
     }
   });
 }
