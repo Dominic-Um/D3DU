@@ -134,12 +134,53 @@ function tryCrafting() {
 }
 statusPanelDiv.innerHTML = "Holding: none";
 
+type TileKey = string;
+const activeTiles = new Map<TileKey, leaflet.Rectangle>();
+
+function tileKey(nx: number, ny: number) {
+  return `${nx},${ny}`;
+}
+
+function getVisibleTileRange(): [number, number, number, number] {
+  const centerX = Math.round(
+    (playerLatLng.lng - CLASSROOM_LATLNG.lng) / TILE_DEGREES,
+  );
+  const centerY = Math.round(
+    (playerLatLng.lat - CLASSROOM_LATLNG.lat) / TILE_DEGREES,
+  );
+  const half = Math.floor(NEIGHBORHOOD_SIZE / 2);
+  return [centerX - half, centerX + half, centerY - half, centerY + half];
+}
+
+function updateVisibleTiles() {
+  const [minX, maxX, minY, maxY] = getVisibleTileRange();
+  const newTiles = new Set<TileKey>();
+
+  for (let nx = minX; nx <= maxX; nx++) {
+    for (let ny = minY; ny <= maxY; ny++) {
+      const key = tileKey(nx, ny);
+      newTiles.add(key);
+
+      if (!activeTiles.has(key)) {
+        const rect = drawCell(nx, ny);
+        activeTiles.set(key, rect);
+      }
+    }
+  }
+
+  for (const [key, rect] of activeTiles) {
+    if (!newTiles.has(key)) {
+      rect.remove();
+      activeTiles.delete(key);
+    }
+  }
+}
+
 function getTokenValue(nx: number, ny: number): number | null {
   const seed = `${nx},${ny}`;
   const h = luck(seed);
 
   if (h < 0.5) return null;
-
   if (h < 0.8) return 1;
   if (h < 0.95) return 2;
   return 3;
@@ -156,17 +197,9 @@ function drawCell(nx: number, ny: number) {
 
   const val = getTokenValue(nx, ny);
   let color = "rgba(0,0,0,0)";
-
   if (val === 1) color = "rgba(255,0,0,0.4)";
   if (val === 2) color = "rgba(0,0,255,0.4)";
   if (val === 3) color = "rgba(0,255,0,0.4)";
-
-  leaflet.rectangle(bounds, {
-    color: color,
-    fillColor: color,
-    fillOpacity: 0.6,
-    weight: 0,
-  }).addTo(map);
 
   const rect = leaflet.rectangle(bounds, {
     color,
@@ -178,35 +211,34 @@ function drawCell(nx: number, ny: number) {
   rect.on("click", () => {
     if (gameWon) return;
     const val = getTokenValue(nx, ny);
-    if (val !== null) {
-      if (val === null) return;
-
-      if (heldToken !== null) {
-        statusPanelDiv.innerHTML = `Holding: ${heldToken}`;
-        return;
-      }
-
-      heldToken = val;
+    if (val === null) return;
+    if (heldToken !== null) {
       statusPanelDiv.innerHTML = `Holding: ${heldToken}`;
+      return;
     }
+    heldToken = val;
+    statusPanelDiv.innerHTML = `Holding: ${heldToken}`;
   });
+
+  return rect;
 }
 
-for (let nx = 0; nx < NEIGHBORHOOD_SIZE; nx++) {
-  for (let ny = 0; ny < NEIGHBORHOOD_SIZE; ny++) {
-    drawCell(nx, ny);
-  }
-}
+updateVisibleTiles();
 
-function movePlayer(dx: number, dy: number) {
-  // dx, dy are tile offsets: (-1,0), (1,0), etc
+let movePlayer = (dx: number, dy: number) => {
   const newLat = playerLatLng.lat + dy * TILE_DEGREES;
   const newLng = playerLatLng.lng + dx * TILE_DEGREES;
 
   playerLatLng = leaflet.latLng(newLat, newLng);
   playerMarker.setLatLng(playerLatLng);
   map.panTo(playerLatLng);
-}
+};
+
+const originalMovePlayer = movePlayer;
+movePlayer = (dx: number, dy: number) => {
+  originalMovePlayer(dx, dy);
+  updateVisibleTiles();
+};
 
 btnN.onclick = () => movePlayer(0, -1);
 btnS.onclick = () => movePlayer(0, 1);
