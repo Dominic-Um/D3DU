@@ -209,12 +209,27 @@ function drawCell(nx: number, ny: number) {
 
   rect.on("click", () => {
     if (gameWon) return;
+
     const val = getTokenValue(nx, ny);
     if (val === null) return;
+
     if (heldToken !== null) {
       statusPanelDiv.innerHTML = `Holding: ${heldToken}`;
       return;
     }
+
+    const playerX = Math.round(
+      (playerLatLng.lng - CLASSROOM_LATLNG.lng) / TILE_DEGREES,
+    );
+    const playerY = Math.round(
+      (playerLatLng.lat - CLASSROOM_LATLNG.lat) / TILE_DEGREES,
+    );
+    const dist = Math.max(Math.abs(playerX - nx), Math.abs(playerY - ny));
+    if (dist > 1) {
+      statusPanelDiv.innerHTML = `Tile too far to interact`;
+      return;
+    }
+
     heldToken = val;
     statusPanelDiv.innerHTML = `Holding: ${heldToken}`;
   });
