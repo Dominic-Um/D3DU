@@ -8,4 +8,10 @@
 
 5.) Crafting mechanics and win condition.
 
-6.) Crafting overhaul.
+6.) Player Movement.
+
+7.) Infinite World.
+
+8.) Dynamic tile spawning and despawning.
+
+9.) Restrict tile interactions.
