@@ -7,3 +7,5 @@
 4.) Store a token.
 
 5.) Crafting mechanics and win condition.
+
+6.) Crafting overhaul.
