@@ -30,6 +30,21 @@ craftBtn.textContent = "Craft Special Item (Cost: 10)";
 craftBtn.id = "craftButton";
 controlPanelDiv.append(craftBtn);
 
+const movePanel = document.createElement("div");
+movePanel.id = "movementPanel";
+
+const btnN = document.createElement("button");
+btnN.textContent = "North";
+const btnS = document.createElement("button");
+btnS.textContent = "South";
+const btnE = document.createElement("button");
+btnE.textContent = "East";
+const btnW = document.createElement("button");
+btnW.textContent = "West";
+
+movePanel.append(btnN, btnS, btnE, btnW);
+controlPanelDiv.append(movePanel);
+
 // Our classroom location
 const CLASSROOM_LATLNG = leaflet.latLng(
   36.997936938057016,
@@ -62,7 +77,8 @@ leaflet
   .addTo(map);
 
 // Add a marker to represent the player
-const playerMarker = leaflet.marker(CLASSROOM_LATLNG);
+let playerLatLng = CLASSROOM_LATLNG;
+const playerMarker = leaflet.marker(playerLatLng);
 playerMarker.bindTooltip("That's you!");
 playerMarker.addTo(map);
 
@@ -181,3 +197,18 @@ for (let nx = 0; nx < NEIGHBORHOOD_SIZE; nx++) {
     drawCell(nx, ny);
   }
 }
+
+function movePlayer(dx: number, dy: number) {
+  // dx, dy are tile offsets: (-1,0), (1,0), etc
+  const newLat = playerLatLng.lat + dy * TILE_DEGREES;
+  const newLng = playerLatLng.lng + dx * TILE_DEGREES;
+
+  playerLatLng = leaflet.latLng(newLat, newLng);
+  playerMarker.setLatLng(playerLatLng);
+  map.panTo(playerLatLng);
+}
+
+btnN.onclick = () => movePlayer(0, -1);
+btnS.onclick = () => movePlayer(0, 1);
+btnE.onclick = () => movePlayer(1, 0);
+btnW.onclick = () => movePlayer(-1, 0);
