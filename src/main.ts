@@ -45,7 +45,6 @@ btnW.textContent = "West";
 movePanel.append(btnN, btnS, btnE, btnW);
 controlPanelDiv.append(movePanel);
 
-// Our classroom location
 const CLASSROOM_LATLNG = leaflet.latLng(
   36.997936938057016,
   -122.05703507501151,
