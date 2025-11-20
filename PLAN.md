@@ -15,3 +15,7 @@
 8.) Dynamic tile spawning and despawning.
 
 9.) Restrict tile interactions.
+
+10.) Memento pattern implementation.
+
+11.) Flyweight rendering.
