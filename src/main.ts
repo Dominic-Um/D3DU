@@ -136,6 +136,9 @@ statusPanelDiv.innerHTML = "Holding: none";
 type TileKey = string;
 const activeTiles = new Map<TileKey, leaflet.Rectangle>();
 
+type CellState = { collected: boolean; value: number | null };
+const modifiedCells = new Map<TileKey, CellState>();
+
 function tileKey(nx: number, ny: number) {
   return `${nx},${ny}`;
 }
@@ -176,6 +179,10 @@ function updateVisibleTiles() {
 }
 
 function getTokenValue(nx: number, ny: number): number | null {
+  const key = tileKey(nx, ny);
+
+  if (modifiedCells.has(key)) return modifiedCells.get(key)!.value;
+
   const seed = `${nx},${ny}`;
   const h = luck(seed);
 
@@ -229,6 +236,8 @@ function drawCell(nx: number, ny: number) {
       statusPanelDiv.innerHTML = `Tile too far to interact`;
       return;
     }
+
+    modifiedCells.set(tileKey(nx, ny), { collected: true, value: null });
 
     heldToken = val;
     statusPanelDiv.innerHTML = `Holding: ${heldToken}`;
