@@ -172,8 +172,8 @@ function updateVisibleTiles() {
 
   for (const [key, rect] of activeTiles) {
     if (!newTiles.has(key)) {
-      rect.remove();
-      activeTiles.delete(key);
+      rect.remove(); // destroy Leaflet object entirely
+      activeTiles.delete(key); // free memory
     }
   }
 }
