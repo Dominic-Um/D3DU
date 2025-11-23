@@ -270,7 +270,28 @@ movePlayer = (dx: number, dy: number) => {
   updateVisibleTiles();
 };
 
-btnN.onclick = () => movePlayer(0, -1);
-btnS.onclick = () => movePlayer(0, 1);
-btnE.onclick = () => movePlayer(1, 0);
-btnW.onclick = () => movePlayer(-1, 0);
+class MapMovementAdapter implements IMovementController {
+  constructor(private readonly mover: (dx: number, dy: number) => void) {}
+
+  moveNorth() {
+    this.mover(0, -1);
+  }
+  moveSouth() {
+    this.mover(0, 1);
+  }
+  moveEast() {
+    this.mover(1, 0);
+  }
+  moveWest() {
+    this.mover(-1, 0);
+  }
+}
+
+const movementController: IMovementController = new MapMovementAdapter(
+  movePlayer,
+);
+
+btnN.onclick = () => movementController.moveNorth();
+btnS.onclick = () => movementController.moveSouth();
+btnE.onclick = () => movementController.moveEast();
+btnW.onclick = () => movementController.moveWest();
