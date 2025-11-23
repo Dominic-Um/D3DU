@@ -133,6 +133,13 @@ function tryCrafting() {
 }
 statusPanelDiv.innerHTML = "Holding: none";
 
+interface IMovementController {
+  moveNorth(): void;
+  moveSouth(): void;
+  moveEast(): void;
+  moveWest(): void;
+}
+
 type TileKey = string;
 const activeTiles = new Map<TileKey, leaflet.Rectangle>();
 
