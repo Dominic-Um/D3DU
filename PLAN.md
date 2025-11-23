@@ -19,3 +19,13 @@
 10.) Memento pattern implementation.
 
 11.) Flyweight rendering.
+
+12.) Movement facade interface.
+
+13.) Button movement implementation.
+
+14.) Geolocation movement.
+
+15.) Movement mode selection.
+
+16.) Persistent save system.
