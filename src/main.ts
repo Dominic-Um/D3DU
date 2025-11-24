@@ -130,6 +130,65 @@ let playerPoints = 0;
 let heldToken: number | null = null;
 let gameWon = false;
 
+function saveGameState() {
+  const state = {
+    playerLat: playerLatLng.lat,
+    playerLng: playerLatLng.lng,
+    playerPoints,
+    heldToken,
+    modifiedCells: Object.fromEntries(modifiedCells),
+    gameWon,
+    movementMode: movementModeSelect?.value ?? "buttons",
+  };
+
+  localStorage.setItem("D3_SAVE", JSON.stringify(state));
+}
+
+function loadGameState() {
+  const raw = localStorage.getItem("D3_SAVE");
+  if (!raw) return;
+
+  try {
+    const saved = JSON.parse(raw);
+
+    playerLatLng = leaflet.latLng(saved.playerLat, saved.playerLng);
+    playerMarker.setLatLng(playerLatLng);
+    map.panTo(playerLatLng);
+
+    playerPoints = saved.playerPoints;
+    heldToken = saved.heldToken;
+    gameWon = saved.gameWon;
+
+    modifiedCells.clear();
+    for (const [k, v] of Object.entries(saved.modifiedCells)) {
+      modifiedCells.set(k, v as CellState);
+    }
+
+    if (movementModeSelect) {
+      movementModeSelect.value = saved.movementMode;
+      if (saved.movementMode === "geo") {
+        enableGeolocationMovement();
+        disableButtonMovementUI();
+      } else {
+        disableGeolocationMovement();
+        enableButtonMovementUI();
+      }
+    }
+
+    if (gameWon) {
+      craftBtn.disabled = true;
+      statusPanelDiv.innerHTML =
+        `🎉 You already won! Final Score: ${playerPoints}`;
+    } else {
+      statusPanelDiv.innerHTML = heldToken
+        ? `Holding: ${heldToken}`
+        : "Holding: none";
+    }
+  } catch (err) {
+    console.error("Failed loading save:", err);
+  }
+}
+
 craftBtn.addEventListener("click", tryCrafting);
 
 function disableTileClicks() {
@@ -152,6 +211,7 @@ function tryCrafting() {
     `🎉 You crafted the Special Item and WIN! Final Score: ${playerPoints}`;
 
   craftBtn.disabled = true;
+  saveGameState();
   disableTileClicks();
 }
 statusPanelDiv.innerHTML = "Holding: none";
@@ -178,6 +238,7 @@ function enableGeolocationMovement() {
       playerMarker.setLatLng(playerLatLng);
       map.panTo(playerLatLng);
       updateVisibleTiles();
+      saveGameState();
     },
     (err) => console.error("Geolocation error:", err),
     { enableHighAccuracy: true },
@@ -299,6 +360,7 @@ function drawCell(nx: number, ny: number) {
 
     heldToken = val;
     statusPanelDiv.innerHTML = `Holding: ${heldToken}`;
+    saveGameState();
   });
 
   return rect;
@@ -319,6 +381,7 @@ const originalMovePlayer = movePlayer;
 movePlayer = (dx: number, dy: number) => {
   originalMovePlayer(dx, dy);
   updateVisibleTiles();
+  saveGameState();
 };
 
 class MapMovementAdapter implements IMovementController {
@@ -371,4 +434,7 @@ movementModeSelect.addEventListener("change", () => {
     disableGeolocationMovement();
     enableButtonMovementUI();
   }
+  saveGameState();
 });
+loadGameState();
+updateVisibleTiles();
