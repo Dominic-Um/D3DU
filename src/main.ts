@@ -45,6 +45,29 @@ btnW.textContent = "West";
 movePanel.append(btnN, btnS, btnE, btnW);
 controlPanelDiv.append(movePanel);
 
+const modeSelectLabel = document.createElement("label");
+modeSelectLabel.textContent = "Movement Mode: ";
+modeSelectLabel.htmlFor = "movementMode";
+
+const movementModeSelect = document.createElement("select");
+movementModeSelect.id = "movementMode";
+
+const optButtons = document.createElement("option");
+optButtons.value = "buttons";
+optButtons.textContent = "Buttons";
+
+const optGeo = document.createElement("option");
+optGeo.value = "geo";
+optGeo.textContent = "Geolocation";
+
+movementModeSelect.append(optButtons, optGeo);
+
+const movementModeDiv = document.createElement("div");
+movementModeDiv.id = "movementModeDiv";
+movementModeDiv.append(modeSelectLabel, movementModeSelect);
+
+controlPanelDiv.append(movementModeDiv);
+
 const CLASSROOM_LATLNG = leaflet.latLng(
   36.997936938057016,
   -122.05703507501151,
@@ -323,3 +346,29 @@ btnN.onclick = () => movementController.moveNorth();
 btnS.onclick = () => movementController.moveSouth();
 btnE.onclick = () => movementController.moveEast();
 btnW.onclick = () => movementController.moveWest();
+
+function enableButtonMovementUI() {
+  btnN.disabled = false;
+  btnS.disabled = false;
+  btnE.disabled = false;
+  btnW.disabled = false;
+}
+
+function disableButtonMovementUI() {
+  btnN.disabled = true;
+  btnS.disabled = true;
+  btnE.disabled = true;
+  btnW.disabled = true;
+}
+
+movementModeSelect.addEventListener("change", () => {
+  const mode = movementModeSelect.value;
+
+  if (mode === "geo") {
+    enableGeolocationMovement();
+    disableButtonMovementUI();
+  } else {
+    disableGeolocationMovement();
+    enableButtonMovementUI();
+  }
+});
