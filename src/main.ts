@@ -140,6 +140,34 @@ interface IMovementController {
   moveWest(): void;
 }
 
+let geoWatchId: number | null = null;
+
+function enableGeolocationMovement() {
+  if (!navigator.geolocation) {
+    console.warn("Geolocation not supported.");
+    return;
+  }
+
+  geoWatchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      playerLatLng = leaflet.latLng(latitude, longitude);
+      playerMarker.setLatLng(playerLatLng);
+      map.panTo(playerLatLng);
+      updateVisibleTiles();
+    },
+    (err) => console.error("Geolocation error:", err),
+    { enableHighAccuracy: true },
+  );
+}
+
+function disableGeolocationMovement() {
+  if (geoWatchId !== null) {
+    navigator.geolocation.clearWatch(geoWatchId);
+    geoWatchId = null;
+  }
+}
+
 type TileKey = string;
 const activeTiles = new Map<TileKey, leaflet.Rectangle>();
 
